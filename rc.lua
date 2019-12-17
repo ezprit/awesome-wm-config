@@ -49,7 +49,11 @@ end
 
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
-beautiful.init(awful.util.get_configuration_dir() .. "themes/zenburn/theme.lua")
+beautiful.init(awful.util.get_configuration_dir() .. "themes/macos-dark/theme.lua")
+beautiful.master_fill_policy = "expand"
+beautiful.useless_gap = 20
+beautiful.gap_single_client = true
+--gears.wallpaper.set("#b1ab99")
 
 -- This is used later as the default terminal and editor to run.
 terminal = "x-terminal-emulator"
@@ -66,9 +70,9 @@ modkey = "Mod4"
 -- Table of layouts to cover with awful.layout.inc, order matters.
 awful.layout.layouts = {
     awful.layout.suit.tile,
-    awful.layout.suit.tile.left,
+--    awful.layout.suit.tile.left,
     awful.layout.suit.tile.bottom,
-    awful.layout.suit.tile.top,
+--    awful.layout.suit.tile.top,
     awful.layout.suit.fair,
     awful.layout.suit.fair.horizontal,
 --    awful.layout.suit.spiral,
@@ -77,10 +81,10 @@ awful.layout.layouts = {
     awful.layout.suit.max.fullscreen,
 --    awful.layout.suit.magnifier,
     awful.layout.suit.corner.nw,
-    awful.layout.suit.floating,
     -- awful.layout.suit.corner.ne,
     -- awful.layout.suit.corner.sw,
     -- awful.layout.suit.corner.se,
+    awful.layout.suit.floating,
 }
 -- }}}
 
@@ -343,7 +347,7 @@ globalkeys = gears.table.join(
               end,
               {description = "lua execute prompt", group = "awesome"}),
     -- Menubar
-    awful.key({ modkey }, "space", function() menubar.show() end,
+    awful.key({ modkey }, "p", function() menubar.show() end,
               {description = "show the menubar", group = "launcher"}),
 
     -- Suspend
@@ -409,7 +413,13 @@ clientkeys = gears.table.join(
         function()
             awful.util.spawn_with_shell("scrot --select --exec 'mv $f ~/Pictures/'")
         end, 
-        {description = "take a screenshot from selected area", group = "client"})
+        {description = "take a screenshot from selected area", group = "client"}),
+
+    awful.key({ modkey }, "space", function() 
+            --awful.util.spawn_with_shell("rofi -modi drun,run,window -show drun -dpi 192")
+            awful.util.spawn("rofi -show combi")
+        end,
+        {description = "show the rofi", group = "launcher"})
 )
 
 -- Bind all key numbers to tags.
@@ -532,12 +542,20 @@ awful.rules.rules = {
     { rule_any = {type = { "normal", "dialog" }
       }, properties = { titlebars_enabled = false }
     },
-
+    { rule = { class = "feh" }, 
+        properties = { 
+            floating = true,
+            titlebars_enabled = true,
+            raise = true,
+            placement = awful.placement.centered
+        }
+    }
     -- Set Firefox to always map on the tag named "2" on screen 1.
     -- { rule = { class = "Firefox" },
     --   properties = { screen = 1, tag = "2" } },
 }
 -- }}}
+
 
 -- {{{ Signals
 -- Signal function to execute when a new client appears.
@@ -552,66 +570,121 @@ client.connect_signal("manage", function (c)
         -- Prevent clients from being unreachable after screen count changes.
         awful.placement.no_offscreen(c)
     end
+    
+    -- Round conrners
+    c.shape = function(cr,w,h)
+        gears.shape.rounded_rect(cr,w,h,20)
+    end
+
 end)
 
--- Add a titlebar if titlebars_enabled is set to true in the rules.
+-- Create titlebar
 client.connect_signal("request::titlebars", function(c)
-    -- buttons for the titlebar
-    local buttons = gears.table.join(
-        awful.button({ }, 1, function()
-            c:emit_signal("request::activate", "titlebar", {raise = true})
-            awful.mouse.client.move(c)
-        end),
-        awful.button({ }, 3, function()
-            c:emit_signal("request::activate", "titlebar", {raise = true})
-            awful.mouse.client.resize(c)
-        end)
-    )
+    -- Code to create your titlebar here
+    local titlebars_enabled = true
+    if titlebars_enabled and (c.type == "normal" or c.type == "dialog") then
+        -- buttons for the titlebar
+        local buttons = awful.util.table.join(
+                awful.button({ }, 1, function()
+                    client.focus = c
+                    c:raise()
+                    awful.mouse.client.move(c)
+                end),
+                awful.button({ }, 3, function()
+                    client.focus = c
+                    c:raise()
+                    awful.mouse.client.resize(c)
+                end)
+                )
 
-    awful.titlebar(c) : setup {
-        { -- Left
-            awful.titlebar.widget.iconwidget(c),
-            buttons = buttons,
-            layout  = wibox.layout.fixed.horizontal
-        },
-        { -- Middle
-            { -- Title
-                align  = "center",
-                widget = awful.titlebar.widget.titlewidget(c)
-            },
-            buttons = buttons,
-            layout  = wibox.layout.flex.horizontal
-        },
-        { -- Right
-            awful.titlebar.widget.floatingbutton (c),
-            awful.titlebar.widget.maximizedbutton(c),
-            awful.titlebar.widget.stickybutton   (c),
-            awful.titlebar.widget.ontopbutton    (c),
-            awful.titlebar.widget.closebutton    (c),
-            layout = wibox.layout.fixed.horizontal()
-        },
-        layout = wibox.layout.align.horizontal
-    }
-end)
+        -- Widgets that are aligned to the right
+        local right_layout = wibox.layout.fixed.horizontal()
+        right_layout:add(awful.titlebar.widget.closebutton(c))
+        right_layout:add(awful.titlebar.widget.minimizebutton(c))
+        right_layout:add(awful.titlebar.widget.maximizedbutton(c))
 
-client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
-client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
--- }}}
+        -- The title goes in the middle
+        local middle_layout = wibox.layout.flex.horizontal()
+        local title = awful.titlebar.widget.titlewidget(c)
+        title:set_align("center")
+        middle_layout:add(title)
+        middle_layout:buttons(buttons)
 
-client.connect_signal("property::floating", function(c)
-    if c.floating then
-        awful.titlebar.show(c)
-    else
+        -- Now bring it all together
+        local layout = wibox.layout.align.horizontal()
+        layout:set_left(right_layout)
+        layout:set_middle(middle_layout)
+
+        awful.titlebar(c):set_widget(layout)
+    end
+
+    -- Hide created titlebar
+    if c.class == "Opera" or c.class == "Chromium" then
         awful.titlebar.hide(c)
     end
 end)
 
 
-beautiful.useless_gap = 5
+-- Add a titlebar if titlebars_enabled is set to true in the rules.
+--client.connect_signal("request::titlebars", function(c)
+--    -- buttons for the titlebar
+--    local buttons = gears.table.join(
+--        awful.button({ }, 1, function()
+--            c:emit_signal("request::activate", "titlebar", {raise = true})
+--            awful.mouse.client.move(c)
+--        end),
+--        awful.button({ }, 3, function()
+--            c:emit_signal("request::activate", "titlebar", {raise = true})
+--            awful.mouse.client.resize(c)
+--        end)
+--    )
+--
+--    awful.titlebar(c) : setup {
+--        { -- Left
+--            awful.titlebar.widget.iconwidget(c),
+--            buttons = buttons,
+--            layout  = wibox.layout.fixed.horizontal
+--        },
+--        { -- Middle
+--            { -- Title
+--                align  = "center",
+--                widget = awful.titlebar.widget.titlewidget(c)
+--            },
+--            buttons = buttons,
+--            layout  = wibox.layout.flex.horizontal
+--        },
+--        { -- Right
+--            awful.titlebar.widget.floatingbutton (c),
+--            awful.titlebar.widget.maximizedbutton(c),
+--            awful.titlebar.widget.stickybutton   (c),
+--            awful.titlebar.widget.ontopbutton    (c),
+--            awful.titlebar.widget.closebutton    (c),
+--            layout = wibox.layout.fixed.horizontal()
+--        },
+--        layout = wibox.layout.align.horizontal
+--    }
+--end)
+
+client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
+client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
+-- }}}
+
+--client.connect_signal("property::floating", function(c)
+--    if c.floating then
+--        awful.titlebar.show(c)
+--
+--        -- Hide created titlebar
+--        if c.class == "Opera" or c.class == "Chromium" then
+--            awful.titlebar.hide(c)
+--        end
+--    else
+--        awful.titlebar.hide(c)
+--    end
+--end)
 
 -- {{{ autostart
-awful.spawn.single_instance("nm-applet")
-awful.spawn.single_instance("blueman-applet")
-awful.spawn.single_instance("setxkbmap -layout 'us,ru' -variant 'winkeys' -option 'grp:caps_toggle,grp_led:caps'")
-awful.spawn.single_instance("compton -cCb")
+--awful.spawn.single_instance("nm-applet")
+--awful.spawn.single_instance("blueman-applet")
+--awful.spawn.single_instance("setxkbmap -layout 'us,ru' -variant 'winkeys' -option 'grp:caps_toggle,grp_led:caps'")
+--awful.spawn.single_instance("compton -cCb")
 -- }}}
