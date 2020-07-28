@@ -12,13 +12,12 @@
 theme                                           = {}
 
 theme.dir                                       = os.getenv("HOME") .. "/.config/awesome/themes/macos-bright"
-theme.wallpaper                                 = os.getenv("HOME") .. "/.config/awesome/themes/wallpaper.jpg"
 
-theme.font                                      = "DejaVu Sans Mono 9"
-theme.fg_normal                                 = "#000000"
-theme.fg_focus                                  = "#eeeeee"
-theme.bg_normal                                 = "#f2f0ec00"
-theme.bg_focus                                  = "#333333"
+theme.font                                      = "Hack 8"
+theme.fg_normal                                 = "#777777"
+theme.fg_focus                                  = "#000000"
+theme.bg_normal                                 = "#f2f0ec"
+theme.bg_focus                                  = "#f2f0ec"
 theme.fg_urgent                                 = "#FF0000"
 theme.bg_urgent                                 = "#121212"
 theme.border_width                              = 0
@@ -37,7 +36,7 @@ theme.menu_width                                = "150"
 theme.bg_systray                                = "#e7e8eb00"
 
 theme.menu_height = 30
-theme.menu_width  = 500
+theme.menu_width  = 300
 
 theme.tasklist_sticky                           = ""
 theme.tasklist_ontop                            = ""

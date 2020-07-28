@@ -9,40 +9,56 @@
                                
 --]]
 
+local theme_assets = require("beautiful.theme_assets")
+local xresources = require("beautiful.xresources")
+local dpi = xresources.apply_dpi
+
+local gfs = require("gears.filesystem")
+local themes_path = gfs.get_themes_dir()
+
 theme                                           = {}
 
 theme.dir                                       = os.getenv("HOME") .. "/.config/awesome/themes/macos-dark"
 theme.wallpaper                                 = os.getenv("HOME") .. "/.config/awesome/themes/wallpaper.jpg"
 
-theme.font                                      = "DejaVu Sans Mono 9"
+theme.font                                      = "Hack 8"
 theme.fg_normal                                 = "#cccccc"
 theme.fg_focus                                  = "#ffffff"
-theme.bg_normal                                 = "#202020A0"
-theme.bg_focus                                  = "#20202000"
+theme.bg_normal                                 = "#2c2c2c"
+theme.bg_focus                                  = "#2c2c2c"
 theme.fg_urgent                                 = "#FF0000"
-theme.bg_urgent                                 = "#12121200"
+theme.bg_urgent                                 = "#2c2c2c"
+
+--theme.useless_gap   = dpi(0)
+
 theme.border_width                              = 0
-theme.border_normal                             = "#121212"
-theme.border_focus                              = "#848484"
+theme.border_normal                             = "#3c3c4c"
+--theme.border_focus                              = "#777777"
+theme.border_focus                              = "#4f97a3"
 
-theme.tasklist_fg_focus                         = "#ffffff"
+theme.tasklist_fg_focus                         = "#4f97a3"
 theme.tasklist_fg_normal                        = "#848484"
-theme.tasklist_bg_focus                         = "#20202000"
-theme.tasklist_bg_normal                        = "#20202000"
+theme.tasklist_bg_focus                         = "#2c2c2c"
+theme.tasklist_bg_normal                        = "#2c2c2c"
 
+--theme.titlebar_height = dpi(20)
 theme.titlebar_bg_normal                        = "#2c2c2c"
 theme.titlebar_bg_focus                         = "#2c2c2c"
 theme.bg_systray                                = "#202020"
 
-theme.menu_height = 50
-theme.menu_width  = 400
+theme.menu_height = dpi(30)
+theme.menu_width  = dpi(300)
 
-theme.tasklist_sticky                           = ""
-theme.tasklist_ontop                            = ""
-theme.tasklist_floating                         = ""
-theme.tasklist_maximized_horizontal             = ""
-theme.tasklist_maximized_vertical               = ""
+--theme.tasklist_sticky                           = ""
+--theme.tasklist_ontop                            = ""
+--theme.tasklist_floating                         = ""
+--theme.tasklist_maximized_horizontal             = ""
+--theme.tasklist_maximized_vertical               = ""
 theme.tasklist_disable_icon                     = true
+
+theme.hotkeys_font = theme.font
+theme.hotkeys_description_font = theme.font
+theme.hotkeys_modifiers_fg = "#ffffff"
 
 theme.awesome_icon                              = theme.dir .."/icons/awesome2.png"
 theme.submenu_icon                              = theme.dir .."/icons/submenu.png"
@@ -101,7 +117,6 @@ theme.titlebar_maximized_button_focus_inactive  = theme.dir .. "/icons/titlebar/
 theme.titlebar_maximized_button_normal_inactive = theme.dir .. "/icons/titlebar/maximized_normal_inactive.png"
 
 -- lain related
-theme.useless_gap_width                         = 15
 theme.layout_centerfair                         = theme.dir .. "/icons/centerfair.png"
 theme.layout_termfair                           = theme.dir .. "/icons/termfair.png"
 theme.layout_centerwork                         = theme.dir .. "/icons/centerwork.png"
@@ -113,5 +128,9 @@ theme.layout_uselesstiletop                     = theme.dir .. "/icons/tiletop.p
 theme.layout_uselesstileleft                    = theme.dir .. "/icons/tileleft.png"
 theme.layout_uselesstilebottom                  = theme.dir .. "/icons/tilebottom.png"
 theme.layout_uselesspiral                       = theme.dir .. "/icons/spiral.png"
+
+-- Define the icon theme for application icons. If not set then the icons
+-- from /usr/share/icons and /usr/share/icons/hicolor will be used.
+theme.icon_theme = "Papirus-Dark"
 
 return theme

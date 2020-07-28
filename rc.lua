@@ -8,19 +8,18 @@ local awful = require("awful")
 require("awful.autofocus")
 -- Widget and layout library
 local wibox = require("wibox")
--- Theme handling library
-local beautiful = require("beautiful")
 -- Notification library
 local naughty = require("naughty")
 local menubar = require("menubar")
-local hotkeys_popup = require("awful.hotkeys_popup")
--- Enable hotkeys help widget for VIM and other apps
--- when client with a matching name is opened:
-require("awful.hotkeys_popup.keys")
 
 -- Load Debian menu entries
 local debian = require("debian.menu")
-local has_fdo, freedesktop = pcall(require, "freedesktop")
+
+-- my custom modoles
+local help = require("help")
+local config = require("config")
+local menu = require("menu")
+local theme = require("theme")
 
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
@@ -45,20 +44,8 @@ do
         in_error = false
     end)
 end
+
 -- }}}
-
--- {{{ Variable definitions
--- Themes define colours, icons, font and wallpapers.
-beautiful.init(awful.util.get_configuration_dir() .. "themes/macos-dark/theme.lua")
-beautiful.master_fill_policy = "expand"
-beautiful.useless_gap = 20
-beautiful.gap_single_client = true
---gears.wallpaper.set("#b1ab99")
-
--- This is used later as the default terminal and editor to run.
-terminal = "x-terminal-emulator"
-editor = os.getenv("EDITOR") or "editor"
-editor_cmd = terminal .. " -e " .. editor
 
 -- Default modkey.
 -- Usually, Mod4 is the key with a logo between Control and Alt.
@@ -71,16 +58,16 @@ modkey = "Mod4"
 awful.layout.layouts = {
     awful.layout.suit.tile,
 --    awful.layout.suit.tile.left,
-    awful.layout.suit.tile.bottom,
+--    awful.layout.suit.tile.bottom,
 --    awful.layout.suit.tile.top,
-    awful.layout.suit.fair,
-    awful.layout.suit.fair.horizontal,
+--    awful.layout.suit.fair,
+--    awful.layout.suit.fair.horizontal,
 --    awful.layout.suit.spiral,
 --    awful.layout.suit.spiral.dwindle,
     awful.layout.suit.max,
-    awful.layout.suit.max.fullscreen,
---    awful.layout.suit.magnifier,
-    awful.layout.suit.corner.nw,
+--    awful.layout.suit.max.fullscreen,
+    awful.layout.suit.magnifier,
+--    awful.layout.suit.corner.nw,
     -- awful.layout.suit.corner.ne,
     -- awful.layout.suit.corner.sw,
     -- awful.layout.suit.corner.se,
@@ -88,40 +75,12 @@ awful.layout.layouts = {
 }
 -- }}}
 
--- {{{ Menu
--- Create a launcher widget and a main menu
-myawesomemenu = {
-   { "hotkeys", function() hotkeys_popup.show_help(nil, awful.screen.focused()) end },
-   { "manual", terminal .. " -e man awesome" },
-   { "edit config", editor_cmd .. " " .. awesome.conffile },
-   { "restart", awesome.restart },
-   { "quit", function() awesome.quit() end },
-}
 
-local menu_awesome = { "awesome", myawesomemenu, beautiful.awesome_icon }
-local menu_terminal = { "open terminal", terminal }
-
-if has_fdo then
-    mymainmenu = freedesktop.menu.build({
-        before = { menu_awesome },
-        after =  { menu_terminal }
-    })
-else
-    mymainmenu = awful.menu({
-        items = {
-                  menu_awesome,
-                  { "Debian", debian.menu.Debian_menu.Debian },
-                  menu_terminal,
-                }
-    })
-end
-
-
-mylauncher = awful.widget.launcher({ image = beautiful.awesome_icon,
-                                     menu = mymainmenu })
+mylauncher = awful.widget.launcher({ image = theme.awesome_icon,
+                                     menu = menu })
 
 -- Menubar configuration
-menubar.utils.terminal = terminal -- Set the terminal for applications that require it
+menubar.utils.terminal = config.terminal -- Set the terminal for applications that require it
 -- }}}
 
 -- Keyboard map indicator and switcher
@@ -171,27 +130,15 @@ local tasklist_buttons = gears.table.join(
                                               awful.client.focus.byidx(-1)
                                           end))
 
-local function set_wallpaper(s)
-    -- Wallpaper
-    if beautiful.wallpaper then
-        local wallpaper = beautiful.wallpaper
-        -- If wallpaper is a function, call it with the screen
-        if type(wallpaper) == "function" then
-            wallpaper = wallpaper(s)
-        end
-        gears.wallpaper.maximized(wallpaper, s, true)
-    end
-end
-
 -- Re-set wallpaper when a screen's geometry changes (e.g. different resolution)
-screen.connect_signal("property::geometry", set_wallpaper)
+screen.connect_signal("property::geometry", theme.set_wallpaper)
 
 awful.screen.connect_for_each_screen(function(s)
     -- Wallpaper
-    set_wallpaper(s)
+    theme.set_wallpaper(s)
 
     -- Each screen has its own tag table.
-    awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9" }, s, awful.layout.layouts[1])
+    awful.tag({ "1", "2", "3", "4", "5" }, s, awful.layout.layouts["1"])
 
     -- Create a promptbox for each screen
     s.mypromptbox = awful.widget.prompt()
@@ -243,15 +190,15 @@ end)
 
 -- {{{ Mouse bindings
 root.buttons(gears.table.join(
-    awful.button({ }, 3, function () mymainmenu:toggle() end),
-    awful.button({ }, 4, awful.tag.viewnext),
-    awful.button({ }, 5, awful.tag.viewprev)
+    --awful.button({ }, 3, function () menu:toggle() end),
+    --awful.button({ }, 4, awful.tag.viewnext),
+    --awful.button({ }, 5, awful.tag.viewprev)
 ))
 -- }}}
 
 -- {{{ Key bindings
 globalkeys = gears.table.join(
-    awful.key({ modkey,           }, "F1",      hotkeys_popup.show_help,
+    awful.key({ modkey,           }, "F1",      help.show,
               {description="show help", group="awesome"}),
     awful.key({ modkey,           }, "Left",   awful.tag.viewprev,
               {description = "view previous", group = "tag"}),
@@ -272,7 +219,7 @@ globalkeys = gears.table.join(
         end,
         {description = "focus previous by index", group = "client"}
     ),
-    awful.key({ modkey,           }, "w", function () mymainmenu:show() end,
+    awful.key({ modkey,           }, "w", function () menu:show() end,
               {description = "show main menu", group = "awesome"}),
 
     -- Layout manipulation
@@ -296,7 +243,7 @@ globalkeys = gears.table.join(
         {description = "go back", group = "client"}),
 
     -- Standard program
-    awful.key({ modkey,           }, "Return", function () awful.spawn(terminal) end,
+    awful.key({ modkey,           }, "Return", function () awful.spawn(config.terminal) end,
               {description = "open a terminal", group = "launcher"}),
     awful.key({ modkey, "Control" }, "r", awesome.restart,
               {description = "reload awesome", group = "awesome"}),
@@ -403,17 +350,16 @@ clientkeys = gears.table.join(
         end ,
         {description = "(un)maximize horizontally", group = "client"}),
 
-    awful.key({ }, "Print", 
-        function()
-            awful.util.spawn_with_shell("scrot --exec 'mv $f ~/Pictures/'")
-        end, 
-        {description = "take a screenshot", group = "client"}),
+        -- Screenshot
+        awful.key({ modkey }, "Home", 
+            function() awful.util.spawn("flameshot gui") end,
+            {description = "Take a screenshot of selection and copy it to clipboard", group = "screenshot"}),
 
-    awful.key({ "Control" }, "Print", 
-        function()
-            awful.util.spawn_with_shell("scrot --select --exec 'mv $f ~/Pictures/'")
-        end, 
-        {description = "take a screenshot from selected area", group = "client"}),
+        awful.key({ modkey, "Control" }, "Home", scrot_window,
+            function() awful.util.spawn("flameshot full") end,
+            {description = "Take a screenshot of focused window", group = "screenshot"}),
+        --awful.key({ "Ctrl" }, "Print", scrot_delay,
+        --  {description = "Take a screenshot of delay", group = "screenshot"}),
 
     awful.key({ modkey }, "space", function() 
             --awful.util.spawn_with_shell("rofi -modi drun,run,window -show drun -dpi 192")
@@ -495,8 +441,8 @@ root.keys(globalkeys)
 awful.rules.rules = {
     -- All clients will match this rule.
     { rule = { },
-      properties = { border_width = beautiful.border_width,
-                     border_color = beautiful.border_normal,
+      properties = { border_width = theme.border_width,
+                     border_color = theme.border_normal,
                      focus = awful.client.focus.filter,
                      raise = true,
                      keys = clientkeys,
@@ -524,12 +470,15 @@ awful.rules.rules = {
           "Tor Browser", -- Needs a fixed window size to avoid fingerprinting by screen size.
           "Wpa_gui",
           "veromix",
-          "xtightvncviewer"},
+          "xtightvncviewer",
+          "Telegram",
+        },
 
         -- Note that the name property shown in xprop might be set slightly after creation of the client
         -- and the name shown there might not match defined rules here.
         name = {
           "Event Tester",  -- xev.
+          "win0"
         },
         role = {
           "AlarmWindow",  -- Thunderbird's calendar.
@@ -538,16 +487,24 @@ awful.rules.rules = {
         }
       }, properties = { floating = true }},
 
+    { rule_any = {name = { "MPlayer" }
+      }, properties = { floating = true, ontop = true, sticky = true }
+    },
+
     -- Add titlebars to normal clients and dialogs
-    { rule_any = {type = { "normal", "dialog" }
-      }, properties = { titlebars_enabled = false }
+    { rule_any = {type = { "normal" }
+      }, properties = { titlebars_enabled = theme.titlebar_enable }
+    },
+    { rule_any = {name = { "Open File" }
+      }, properties = { 
+          width = 1000,
+          height = 700,
+          -- placement = awful.placement.centered,
+      }, callback = function(c) awful.placement.centered(c) end
     },
     { rule = { class = "feh" }, 
         properties = { 
-            floating = true,
-            titlebars_enabled = true,
-            raise = true,
-            placement = awful.placement.centered
+            fullscreen = true
         }
     }
     -- Set Firefox to always map on the tag named "2" on screen 1.
@@ -562,7 +519,7 @@ awful.rules.rules = {
 client.connect_signal("manage", function (c)
     -- Set the windows at the slave,
     -- i.e. put it at the end of others instead of setting it master.
-    -- if not awesome.startup then awful.client.setslave(c) end
+    if not awesome.startup then awful.client.setslave(c) end
 
     if awesome.startup
       and not c.size_hints.user_position
@@ -573,7 +530,7 @@ client.connect_signal("manage", function (c)
     
     -- Round conrners
     c.shape = function(cr,w,h)
-        gears.shape.rounded_rect(cr,w,h,20)
+        gears.shape.rounded_rect(cr,w,h,border_radius)
     end
 
 end)
@@ -615,7 +572,7 @@ client.connect_signal("request::titlebars", function(c)
         layout:set_left(right_layout)
         layout:set_middle(middle_layout)
 
-        awful.titlebar(c):set_widget(layout)
+        awful.titlebar(c, {size = theme.titlebar_height}):set_widget(layout)
     end
 
     -- Hide created titlebar
@@ -643,9 +600,6 @@ end)
 --        { -- Left
 --            awful.titlebar.widget.iconwidget(c),
 --            buttons = buttons,
---            layout  = wibox.layout.fixed.horizontal
---        },
---        { -- Middle
 --            { -- Title
 --                align  = "center",
 --                widget = awful.titlebar.widget.titlewidget(c)
@@ -665,21 +619,21 @@ end)
 --    }
 --end)
 
-client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
-client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
+client.connect_signal("focus", function(c) c.border_color = theme.border_focus end)
+client.connect_signal("unfocus", function(c) c.border_color = theme.border_normal end)
 -- }}}
 
 --client.connect_signal("property::floating", function(c)
---    if c.floating then
---        awful.titlebar.show(c)
---
---        -- Hide created titlebar
---        if c.class == "Opera" or c.class == "Chromium" then
---            awful.titlebar.hide(c)
---        end
---    else
---        awful.titlebar.hide(c)
---    end
+    --if c.floating then
+        --awful.titlebar.show(c)
+
+        ---- Hide created titlebar
+        --if c.class == "Opera" or c.class == "Chromium" then
+            --awful.titlebar.hide(c)
+        --end
+    --else
+        --awful.titlebar.hide(c)
+    --end
 --end)
 
 -- {{{ autostart
